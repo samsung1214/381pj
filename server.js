@@ -1,3 +1,10 @@
+/*
+*	Written by Sam Sung Kai Yeung & Ma Pui Nam 
+*	For OUHK COMP 381 Project Assignment
+*	A Node.js Server providing RESTful web service
+*	of a collection (restaurants) in MongodbLab.
+*	06 Dec 2015
+*/
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
