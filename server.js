@@ -109,6 +109,38 @@ app.get('/restaurants', function(req,res) {
 	});
 });
 
+
+app.get('/score/:score', function(req,res) {
+	var score = parseInt(req.params.score);
+	mongoose.connect(mongodbURL);
+	var db = mongoose.connection;
+	db.on('error', console.error.bind(console, 'connection error:'));
+	db.once('open', function (callback) {
+	var Restaurant = mongoose.model('Restaurant', restaurantSchema);
+		Restaurant.aggregate([{"$unwind":"$grades"},{"$group":{"_id":"$restaurant_id", "averagescore":{$avg:"$grades.score"}}},{$match:{"score":{$lt:score}}}],function(err,results){
+			if (err) {
+				console.log("Error: " + err.message);
+				res.write(err.message);
+				db.close();
+			}
+			else {
+				db.close();
+				console.log('Found: ',results.length);
+				res.type('application/json');
+				if (results.length ==0) {
+					var message = '{"message":"No matching document"}';
+					res.json(JSON.parse(message));
+				}
+				else {
+					res.json(results);
+				}		
+			}
+		});
+	});
+	
+	
+});
+
 function getCriteria (req,res,attrib, attrib_value,criteria) {
 	if (attrib == "street" || attrib == "zipcode" ||
 	    attrib == "building") {
@@ -420,47 +452,47 @@ app.post('/', function(req,res) {
 	var _id;
 
 	if(!req.body.hasOwnProperty('name')) {
-    		return res.send('Error 400: Name should be provided in the data.');
+    		name = "";
 	}
 	else { name = req.body.name;}
 
 	if(!req.body.hasOwnProperty('building')) {
-    		return res.send('Error 400: Building should be provided in the data.');
+    		building = "";
 	}
 	else { building = req.body.building;}
 
 	if(!req.body.hasOwnProperty('street')) {
-    		return res.send('Error 400: Street should be provided in the data.');	
+    		street = "";
 	}
 	else { street = req.body.street;}
 
 	if(!req.body.hasOwnProperty('zipcode')) {
-    		return res.send('Error 400: Zipcode should be provided in the data.');	
+    		zipcode = "";
 	}
 	else { zipcode = req.body.zipcode;}
 		
 	if(!req.body.hasOwnProperty('lon')) {
-    		return res.send('Error 400: Lon should be provided in the data.');	
+    		lon = 0;
 	}
 	else { lon = parseFloat(req.body.lon);}
 		
 	if(!req.body.hasOwnProperty('lat')) {
-    		return res.send('Error 400: Lat should be provided in the data.');	
+    		lat = 0;	
 	}
 	else { lat = parseFloat(req.body.lat);}
 		
 	if(!req.body.hasOwnProperty('borough')) {
-    		return res.send('Error 400: Borough should be provided in the data.');	
+    		borough = "";
 	}
 	else { borough = req.body.borough;}
 		
 	if(!req.body.hasOwnProperty('cuisine')) {
-    		return res.send('Error 400: cuisine should be provided in the data.');	
+    		cuisine = "";
 	}
 	else { cuisine = req.body.cuisine;}
 		
 	if(!req.body.hasOwnProperty('restaurant_id')) {
-    		return res.send('Error 400: Restaurant ID should be provided in the data.');	
+    		restaurant = "";
 	}
 	else { restaurant_id = req.body.restaurant_id;}
 
@@ -754,7 +786,7 @@ app.put('/:attrib/:attrib_value/grade', function(req,res) {
 	var score;
 
 	if(!req.body.hasOwnProperty('date')) {
-    		return res.send('Error 400: Name should be provided in the data.');
+    		return res.send('Error 400: Date should be provided in the data.');
 	}
 	else { date = req.body.date;}
 	if(!req.body.hasOwnProperty('grade')) {
@@ -877,11 +909,11 @@ app.delete('/:attrib/:attrib_value/grade', function(req,res) {
    						else if(grade&&score)
    							results.grades.pull( {grade:grade,score:score});
    						else if(date)
-   							results.grades.pull( {date:new Date(date),grade:grade,score:score});
+   							results.grades.pull( {date:new Date(date)});
    						else if(grade)
-   							results.grades.pull( {date:new Date(date),grade:grade,score:score});
+   							results.grades.pull( {grade:grade});
    						else if(score)
-   							results.grades.pull( {date:new Date(date),grade:grade,score:score});
+   							results.grades.pull( {score:score});
    						else {
     							return res.send('Error 400: Date or Grade or Score must be provided in the data.');
    						}
