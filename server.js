@@ -117,7 +117,7 @@ app.get('/score/:score', function(req,res) {
 	db.on('error', console.error.bind(console, 'connection error:'));
 	db.once('open', function (callback) {
 	var Restaurant = mongoose.model('Restaurant', restaurantSchema);
-		Restaurant.aggregate([{"$unwind":"$grades"},{"$group":{"_id":"$restaurant_id", "averagescore":{$avg:"$grades.score"}}},{$match:{"score":{$lt:score}}}],function(err,results){
+		Restaurant.aggregate([{"$unwind":"$grades"},{"$group":{"_id":"$restaurant_id", "averagescore":{$avg:"$grades.score"}}},{$match:{"averagescore":{"$lt":score}}}],function(err,results){
 			if (err) {
 				console.log("Error: " + err.message);
 				res.write(err.message);
